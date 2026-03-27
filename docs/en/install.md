@@ -113,8 +113,6 @@ COMPILE=1                 # Enable compile optimization
 GRADIO_PORT=7860         # WebUI port
 API_PORT=8080            # API server port
 UV_VERSION=0.8.15        # UV package manager version
-CUDA_VER=12.9.0          # CUDA base image version (e.g. 12.6.0 for older drivers)
-UV_EXTRA=cu129           # PyTorch CUDA variant (cu126, cu128, cu129) — must match CUDA_VER
 ```
 
 The command will build the image and run the container. You can access the WebUI at `http://localhost:7860` and the API server at `http://localhost:8080`.
@@ -129,8 +127,8 @@ docker build \
     --platform linux/amd64 \
     -f docker/Dockerfile \
     --build-arg BACKEND=cuda \
-    --build-arg CUDA_VER=12.9.0 \
-    --build-arg UV_EXTRA=cu129 \
+    --build-arg CUDA_VER=12.6.0 \
+    --build-arg UV_EXTRA=cu126 \
     --target webui \
     -t fish-speech-webui:cuda .
 
@@ -139,8 +137,8 @@ docker build \
     --platform linux/amd64 \
     -f docker/Dockerfile \
     --build-arg BACKEND=cuda \
-    --build-arg CUDA_VER=12.9.0 \
-    --build-arg UV_EXTRA=cu129 \
+    --build-arg CUDA_VER=12.6.0 \
+    --build-arg UV_EXTRA=cu126 \
     --target server \
     -t fish-speech-server:cuda .
 

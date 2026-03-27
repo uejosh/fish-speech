@@ -87,8 +87,6 @@ def get_content_type(audio_format):
         return "audio/flac"
     elif audio_format == "mp3":
         return "audio/mpeg"
-    elif audio_format == "opus":
-        return "audio/ogg"
     else:
         return "application/octet-stream"
 
@@ -108,7 +106,7 @@ def wants_json(req):
     """
     q = req.query_params.get("format", "").strip().lower()
     if q in {"json", "application/json", "msgpack", "application/msgpack"}:
-        return q in ("json", "application/json")
+        return q == "json"
     accept = req.headers.get("Accept", "").strip().lower()
     return "application/json" in accept and "application/msgpack" not in accept
 

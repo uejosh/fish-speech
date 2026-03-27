@@ -1,5 +1,4 @@
 import io
-import re
 from hashlib import sha256
 from pathlib import Path
 from typing import Callable, Literal, Tuple
@@ -17,8 +16,6 @@ from fish_speech.utils.file import (
 )
 from fish_speech.utils.schema import ServeReferenceAudio
 
-_ID_PATTERN = re.compile(r"^[a-zA-Z0-9\-_ ]+$")
-
 
 class ReferenceLoader:
     def __init__(self) -> None:
@@ -34,38 +31,17 @@ class ReferenceLoader:
         self.encode_reference: Callable
 
         # Define the torchaudio backend
-        # list_audio_backends() was removed in torchaudio 2.9
-        try:
-            backends = torchaudio.list_audio_backends()
-            if "ffmpeg" in backends:
-                self.backend = "ffmpeg"
-            else:
-                self.backend = "soundfile"
-        except AttributeError:
-            # torchaudio 2.9+ removed list_audio_backends()
-            # Try ffmpeg first, fallback to soundfile
-            try:
-                import torchaudio.io._load_audio_fileobj  # noqa: F401
-
-                self.backend = "ffmpeg"
-            except (ImportError, ModuleNotFoundError):
-                self.backend = "soundfile"
-
-    @staticmethod
-    def _validate_id(id: str) -> None:
-        if not _ID_PATTERN.match(id) or len(id) > 255:
-            raise ValueError(
-                "Reference ID contains invalid characters or is too long. "
-                "Only alphanumeric, hyphens, underscores, and spaces are allowed."
-            )
+        backends = torchaudio.list_audio_backends()
+        if "ffmpeg" in backends:
+            self.backend = "ffmpeg"
+        else:
+            self.backend = "soundfile"
 
     def load_by_id(
         self,
         id: str,
         use_cache: Literal["on", "off"],
     ) -> Tuple:
-        self._validate_id(id)
-
         # Load the references audio and text by id
         ref_folder = Path("references") / id
         ref_folder.mkdir(parents=True, exist_ok=True)
@@ -202,7 +178,18 @@ class ReferenceLoader:
             FileNotFoundError: If the audio file doesn't exist
             OSError: If file operations fail
         """
-        self._validate_id(id)
+        # Validate ID format
+        import re
+
+        if not re.match(r"^[a-zA-Z0-9\-_ ]+$", id):
+            raise ValueError(
+                "Reference ID contains invalid characters. Only alphanumeric, hyphens, underscores, and spaces are allowed."
+            )
+
+        if len(id) > 255:
+            raise ValueError(
+                "Reference ID is too long. Maximum length is 255 characters."
+            )
 
         # Check if reference already exists
         ref_dir = Path("references") / id
@@ -262,8 +249,7 @@ class ReferenceLoader:
             FileNotFoundError: If the reference ID doesn't exist
             OSError: If file operations fail
         """
-        self._validate_id(id)
-
+        # Check if reference exists
         ref_dir = Path("references") / id
         if not ref_dir.exists():
             raise FileNotFoundError(f"Reference ID '{id}' does not exist")
